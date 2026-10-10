@@ -1,86 +1,135 @@
-# C++20 price-time-priority order book
+# C++20 price-time order book
 
-A corrected, self-contained, header-only C++20 matching engine based on the supplied implementation.
+A single-symbol, single-threaded limit order book with deterministic CSV replay,
+reproducible benchmarks, and correctness tests. Uses the C++20 standard library;
+no third-party runtime or test dependencies.
 
-Imported from `working_orderbook_cpp20.zip`. The original learning reference is
-[Tzadiko/Orderbook](https://github.com/Tzadiko/Orderbook).
+The engine matches the best resting price first, FIFO within each price level,
+and executes at the resting order's price. GTC remainders rest; IOC remainders are
+discarded. Cancel/replace modifications reset priority. Prices are positive
+integer ticks, with 32-bit quantities and 64-bit IDs and aggregated depth.
 
-## Build and run
+## Build and try it
 
-From the project directory, use the included presets (CMake 3.25+ and Ninja):
+Requires a C++20 compiler, CMake 3.25+, and Ninja. Run from the repository root:
 
 ```bash
 cmake --preset debug
 cmake --build --preset debug
-./build/debug/orderbook_demo
 ctest --preset debug
+./build/debug/orderbook_demo
+./build/debug/orderbook_replay examples/session.csv
+```
 
+The replay example produces:
+
+```text
+TRADE,103,101,10000,10
+TRADE,103,102,10010,2
+SUMMARY,3,2,1
+ASK,10010,3
+```
+
+Or submit your own commands through stdin:
+
+```bash
+./build/debug/orderbook_replay - <<'CSV'
+ADD,101,SELL,10000,10,GTC
+ADD,102,SELL,10010,5,GTC
+ADD,103,BUY,10020,12,IOC
+CSV
+```
+
+## Replay format
+
+| Command | Fields |
+| --- | --- |
+| `ADD` | `ADD,id,BUY\|SELL,price,quantity,GTC\|IOC` |
+| `MODIFY` | `MODIFY,id,BUY\|SELL,price,replacement_total_quantity` |
+| `CANCEL` | `CANCEL,id` |
+
+No header or CSV quoting. Blank lines and full-line `#` comments are ignored;
+field whitespace and CRLF are accepted. Numeric fields use unsigned decimal
+spelling with no signs or trailing characters. Prices must be 1–2147483647,
+quantities 1–4294967295, and IDs 0–18446744073709551615.
+
+Output contains trades and cancellation outcomes, then `SUMMARY,commands,trades,
+resting_orders` and descending `BID,price,quantity` / ascending `ASK,price,quantity`
+depth. Unknown cancels produce `NOT_FOUND`. Duplicate live IDs, missing modify
+IDs, side changes, invalid values, and malformed commands produce a line-numbered
+stderr error and exit 2. Earlier records remain; no success summary follows a
+rejected input. Replay is sequential, without rollback or persistent state.
+`--help` exits 0; file/open/read and argument errors exit 2.
+
+`FillAndKill` in the C++ API means IOC, not all-or-none FOK. An ID can be reused
+after it leaves the book. A modification preserves side/type but replaces total
+quantity and resets filled history and FIFO priority. `TradeInfo::price_` is the
+side's limit; `Trade::GetExecutionPrice()` is the execution price.
+
+## Benchmarks
+
+```bash
 cmake --preset release
 cmake --build --preset release
 ctest --preset release
+./build/release/orderbook_bench --operations 100000 --repetitions 3 --seed 42
 ```
 
-The sanitizer preset uses the installed Clang compiler, avoiding missing GCC
-sanitizer runtime packages on this machine:
+Runs `resting`, `matching`, `modify`, and `mixed` workloads. CSV output reports
+validated trade/state counts, aggregate throughput, and p50/p99 operation latency
+from a separate pass. Defaults match the command above; operations range from
+1 to 1000000, repetitions from 1 to 30, and seeds span uint64. Invalid, duplicate,
+or missing options exit 2; `--help` exits 0.
+
+[Measured baseline and methodology](docs/BENCHMARKS.md) explains precisely what
+these small, bounded workloads measure. These results are machine-specific and
+include command execution and result accounting.
+
+## Verification and editors
+
+Five CTest groups cover engine semantics and 12,000 randomized differential
+operations, replay behavior, the executable fixture, benchmark workloads/options,
+and a benchmark smoke run. Assertions in the original engine tests remain active
+in Release; new tests use checks independent of `NDEBUG`.
 
 ```bash
+cmake --preset clang-release
+cmake --build --preset clang-release
+ctest --preset clang-release
+
 cmake --preset sanitize
 cmake --build --preset sanitize
 ctest --preset sanitize
 ```
 
-> The tests explicitly re-enable `assert()` even when compiled under `Release` (`-DNDEBUG`), so validation also runs in optimized builds.
+The sanitizer preset requires Clang with ASan/UBSan runtimes. Local verification
+passed all five groups in Debug, GCC Release, Clang Release, and Clang ASan/UBSan.
+Leak detection was disabled only for the sandbox test process; the workflow uses
+normal sanitizer settings. The GitHub Actions workflow is configured for both
+Release compilers and sanitizers; hosted results are pending the first push.
 
-For a direct compiler build without CMake:
+VS Code has project-local build, replay, test, benchmark, and GDB configurations.
+`Ctrl+Shift+B` builds Debug; select demo or replay for F5. Extensions are
+recommendations, not automatic installs. CLion can open `CMakeLists.txt`. Neovim
+with clangd can use `--compile-commands-dir=build/debug` after configuration.
 
-```bash
-g++ -std=c++20 -O2 -Wall -Wextra -Wpedantic main.cpp -o orderbook_demo
-./orderbook_demo
+Generated files stay in ignored `build/` directories. Delete `build/` to reclaim
+space and configure again before rebuilding.
 
-g++ -std=c++20 -O2 -Wall -Wextra -Wpedantic -I. tests/orderbook_tests.cpp -o orderbook_tests
-./orderbook_tests
-```
+## Design, scope, and provenance
 
-All dependencies are standard C++; setup requires no package downloads. Generated
-CMake files stay under the Git-ignored `build/` directory. Delete `build/` whenever
-you want to reclaim space, then rerun configure before building again.
+- [Design and complexity](docs/DESIGN.md)
+- [Contributing and test commands](CONTRIBUTING.md)
+- [Résumé wording and contribution notes](docs/RESUME.md)
 
-## Editor setup
+This educational engine omits networking, concurrency, persistence/recovery,
+market data feeds, risk checks, fees, self-trade prevention, market/stop/iceberg
+orders, and full rollback on allocation failure. Tick-size and symbol validation
+belong upstream. It is not a production exchange.
 
-Open this project directory in your editor. In VS Code, the workspace recommends
-C/C++ and CMake Tools: `Ctrl+Shift+B` builds Debug, F5 launches the demo under GDB,
-and the **Test debug** task builds and runs the included tests. Extensions are
-recommended rather than installed automatically.
-
-CLion can open the top-level `CMakeLists.txt` as an existing project. For Neovim
-with `clangd`, configure Debug first and point `clangd` at the compilation
-database in `build/debug/` (for example, `--compile-commands-dir=build/debug`).
-The build itself is independent of the editor.
-
-## Semantics
-
-- **Price**: signed 32-bit positive *integer ticks*, not floating point monetary values; e.g., if tick size is $0.01, `10000` means $100.00.
-- **OrderType::GoodTillCancel (GTC)**: fills immediately against crossing resting orders, then rests any remainder.
-- **OrderType::FillAndKill (IOC)**: fills immediately against crossing resting orders, then discards any remainder. It does **not** require full execution. If you need all-or-none Fill-Or-Kill (FOK), that is a separate order type requiring an available-volume precheck.
-- **Price-time priority**: best resting price first, FIFO at a price; executions occur at the *resting* order's price.
-- **TradeInfo::price_**: each side's *limit price*. Use `Trade::GetExecutionPrice()` for the single actual trade price.
-- **Order IDs**: unique among *live/resting* orders. Once filled or canceled (including an IOC), an ID may be reused. A real exchange gateway typically enforces a separate client/order-ID policy.
-- **CancelOrder(id)**: returns false if not a live order; true if canceled.
-- **ModifyOrder(OrderModify{id, side, price, newTotalQuantity})**: cancel-replace; keeps the order type and side, replaces total quantity, resets time priority and filled history. Rejects invalid values or side changes without removing the existing order. Throws if order ID is not live. This is a simple **cancel/replace policy**, not exchange-specific amend-in-place semantics.
-- **External pointer safety**: submitted `shared_ptr<Order>` is copied into the engine, and `Order::Fill` is private. `GetOrder` and `GetOrderInfos` return independent snapshots.
-- **Aggregate depth**: accumulated with `uint64_t` (checks overflow), even though individual orders have `uint32_t` quantity.
-- **Input validation**: rejects null orders, nonpositive prices, zero quantities, unknown enum values, and duplicate live IDs.
-- **Not thread-safe**: synchronize all order-book access externally if using multiple threads.
-
-## Layout
-
-- `orderbook.hpp`: engine and API (header-only)
-- `main.cpp`: demonstration with GTC asks + incoming IOC buy
-- `tests/orderbook_tests.cpp`: targeted tests and a 12,000-step randomized differential test against an independent, simpler reference matcher
-- `CMakeLists.txt`: C++20 demo and CTest build
-- `CMakePresets.json`: Debug, Release, and Clang sanitizer configurations
-- `.vscode/`: project-local build, run, test, and GDB tasks
-
-## Scope / limitations
-
-This is an educational **single-symbol limit order book**, not a production exchange. It intentionally omits message sequencing, trading sessions, matching-engine persistence/recovery, risk limits, external price tick validation, fees, market/stop/iceberg order types, self-trade prevention, event journaling, advanced allocation policies, live feed concurrency, and full transaction rollback on memory allocation failure. `Price` encodes already-normalized ticks; tick-size and symbol-level validation must be applied upstream. Returns only executions generated by the newly submitted or modified order. The matching engine is deterministic given the same sequence of commands.
+The baseline engine, demo, and engine tests were imported from the supplied
+`working_orderbook_cpp20.zip`. The original learning reference is
+[Tzadiko/Orderbook](https://github.com/Tzadiko/Orderbook). Replay, benchmarks,
+build/editor integration, CI configuration, and portfolio documentation were
+added with AI assistance. Claims of personal implementation should reflect the
+work you actually complete and can explain.
