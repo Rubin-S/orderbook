@@ -51,3 +51,19 @@ if(BUILD_TESTING)
         "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_replay.cmake")
 endif()
+
+add_library(orderbook_benchmark_support STATIC benchmarks/benchmark.cpp)
+target_link_libraries(orderbook_benchmark_support PUBLIC orderbook_replay_support)
+
+if(BUILD_TESTING)
+    add_executable(benchmark_tests tests/benchmark_tests.cpp)
+    target_link_libraries(benchmark_tests PRIVATE orderbook_benchmark_support)
+    add_test(NAME benchmark_tests COMMAND benchmark_tests)
+endif()
+
+target_compile_definitions(orderbook_benchmark_support PRIVATE ORDERBOOK_BUILD_TYPE="$<CONFIG>")
+add_executable(orderbook_bench benchmarks/benchmark_main.cpp)
+target_link_libraries(orderbook_bench PRIVATE orderbook_benchmark_support)
+if(BUILD_TESTING)
+    add_test(NAME benchmark_smoke COMMAND orderbook_bench --operations 120 --repetitions 1 --seed 42)
+endif()
