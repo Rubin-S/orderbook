@@ -108,7 +108,8 @@ Leak detection was disabled only for the sandbox test process; the workflow uses
 normal sanitizer settings and makes UBSan diagnostics fatal. A sixth test in
 sanitizer builds intentionally triggers overflow to check this failure policy.
 The GitHub Actions workflow is configured for both
-Release compilers and sanitizers; hosted results are pending the first push.
+Release compilers and sanitizers. The [first hosted run](https://github.com/Rubin-S/orderbook/actions/runs/38057029270)
+passed all three configurations.
 
 VS Code has project-local build, replay, test, benchmark, and GDB configurations.
 `Ctrl+Shift+B` builds Debug; select demo or replay for F5. Extensions are

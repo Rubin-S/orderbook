@@ -29,8 +29,9 @@ After implementing and verifying those parts yourself, choose relevant bullets:
 - Validated behavior with targeted and randomized differential tests, optimized
   GCC/Clang builds, and ASan/UBSan checks.
 
-The first bullet applies only if you implement the engine yourself. Hosted CI
-is configured but remains unverified until your first GitHub push. Do not claim
+The first bullet applies only if you implement the engine yourself.
+[Hosted CI passed](https://github.com/Rubin-S/orderbook/actions/runs/38057029270)
+for GCC Release, Clang Release, and Clang ASan/UBSan. Do not claim
 coverage percentages, an optimization speedup, production exchange readiness,
 or competitive HFT latency. If citing a measurement, name the scenario, machine,
 Release configuration, and method from [BENCHMARKS.md](BENCHMARKS.md); a raw number
