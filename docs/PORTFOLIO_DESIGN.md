@@ -1,10 +1,11 @@
-# Order book portfolio upgrade — proposed design
+# Order book portfolio upgrade — approved design
 
 Date: 10 October 2026
 
 Project: `/home/rubins/Developer/trading/orderbook`
 
-Status: proposed for review. The features below have not been implemented yet.
+Status: approved by the user on 10 October 2026. Implementation is pending plan
+review. The features below have not been implemented yet.
 
 ## Purpose and constraints
 
