@@ -33,3 +33,21 @@ if(BUILD_TESTING)
     target_link_libraries(orderbook_tests PRIVATE orderbook)
     add_test(NAME orderbook_tests COMMAND orderbook_tests)
 endif()
+
+add_library(orderbook_replay_support STATIC tools/replay.cpp)
+target_link_libraries(orderbook_replay_support PUBLIC orderbook)
+
+if(BUILD_TESTING)
+    add_executable(replay_tests tests/replay_tests.cpp)
+    target_link_libraries(replay_tests PRIVATE orderbook_replay_support)
+    add_test(NAME replay_tests COMMAND replay_tests)
+endif()
+
+add_executable(orderbook_replay tools/replay_main.cpp)
+target_link_libraries(orderbook_replay PRIVATE orderbook_replay_support)
+if(BUILD_TESTING)
+    add_test(NAME replay_cli COMMAND "${CMAKE_COMMAND}"
+        "-DREPLAY=$<TARGET_FILE:orderbook_replay>"
+        "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_replay.cmake")
+endif()
