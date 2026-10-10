@@ -37,13 +37,15 @@ ASan/UBSan. Hosted execution begins when the repository is pushed.
 - `benchmark_tests`: option boundaries, reproducibility, lengths 1–65 in all four
   scenarios, independently calculated outcomes, and percentile/metric behavior.
 - `benchmark_smoke`: the executable at 120 operations, one repetition, seed 42.
+- `sanitizer_failure_policy` (sanitizer builds only): intentional signed overflow
+  must exit unsuccessfully; detects accidental recovery from UBSan diagnostics.
 
 ## Formatting and evidence
 
 Use the repository's `.clang-format` for C++ changes. For the added tooling:
 
 ```bash
-clang-format --dry-run --Werror tools/*.hpp tools/*.cpp benchmarks/*.hpp benchmarks/*.cpp tests/replay_tests.cpp tests/benchmark_tests.cpp
+clang-format --dry-run --Werror tools/*.hpp tools/*.cpp benchmarks/*.hpp benchmarks/*.cpp tests/replay_tests.cpp tests/benchmark_tests.cpp tests/sanitizer_failure.cpp
 ```
 
 Keep generated files inside ignored `build/` directories and remove them when

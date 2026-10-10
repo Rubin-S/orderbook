@@ -105,7 +105,9 @@ ctest --preset sanitize
 The sanitizer preset requires Clang with ASan/UBSan runtimes. Local verification
 passed all five groups in Debug, GCC Release, Clang Release, and Clang ASan/UBSan.
 Leak detection was disabled only for the sandbox test process; the workflow uses
-normal sanitizer settings. The GitHub Actions workflow is configured for both
+normal sanitizer settings and makes UBSan diagnostics fatal. A sixth test in
+sanitizer builds intentionally triggers overflow to check this failure policy.
+The GitHub Actions workflow is configured for both
 Release compilers and sanitizers; hosted results are pending the first push.
 
 VS Code has project-local build, replay, test, benchmark, and GDB configurations.
