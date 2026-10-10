@@ -1,0 +1,36 @@
+name: C++ checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC Release
+            preset: release
+            compiler: g++
+          - name: Clang Release
+            preset: clang-release
+            compiler: clang++
+          - name: Clang ASan and UBSan
+            preset: sanitize
+            compiler: clang++
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake --preset "${{ matrix.preset }}" -DCMAKE_CXX_COMPILER="${{ matrix.compiler }}"
+      - name: Build
+        run: cmake --build --preset "${{ matrix.preset }}" --parallel 2
+      - name: Test
+        run: ctest --preset "${{ matrix.preset }}"

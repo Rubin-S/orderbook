@@ -39,6 +39,14 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "ORDERBOOK_ENABLE_SANITIZERS": "ON"
       }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Release with Clang",
+      "inherits": "release",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
     }
   ],
   "buildPresets": [
@@ -53,6 +61,10 @@
     {
       "name": "sanitize",
       "configurePreset": "sanitize"
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "clang-release"
     }
   ],
   "testPresets": [
@@ -79,6 +91,16 @@
     {
       "name": "sanitize",
       "configurePreset": "sanitize",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "clang-release",
       "output": {
         "outputOnFailure": true
       },

@@ -58,6 +58,67 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Replay example (debug)",
+      "type": "process",
+      "command": "${workspaceFolder}/build/debug/orderbook_replay",
+      "args": [
+        "${workspaceFolder}/examples/session.csv"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "dependsOn": "Build debug"
+    },
+    {
+      "label": "Configure release",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "release"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build release",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "--preset",
+        "release"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "dependsOn": "Configure release"
+    },
+    {
+      "label": "Benchmark (release)",
+      "type": "process",
+      "command": "${workspaceFolder}/build/release/orderbook_bench",
+      "args": [
+        "--operations",
+        "100000",
+        "--repetitions",
+        "3",
+        "--seed",
+        "42"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "dependsOn": "Build release"
     }
   ]
 }
