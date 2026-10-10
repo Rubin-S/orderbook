@@ -22,3 +22,8 @@
 .env
 .env.*
 !.env.example
+
+/.idea/
+/orderbook_demo
+/orderbook_tests
+/orderbook_tests_sanitized

@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug orderbook (GDB)",
+      "name": "Debug orderbook demo (GDB)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/debug/orderbook",
+      "program": "${workspaceFolder}/build/debug/orderbook_demo",
       "args": [],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": true,

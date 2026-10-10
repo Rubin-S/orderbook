@@ -5,35 +5,58 @@
       "label": "Configure debug",
       "type": "process",
       "command": "cmake",
-      "args": ["--preset", "debug"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "--preset",
+        "debug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     },
     {
       "label": "Build debug",
       "type": "process",
       "command": "cmake",
-      "args": ["--build", "--preset", "debug"],
+      "args": [
+        "--build",
+        "--preset",
+        "debug"
+      ],
       "dependsOn": "Configure debug",
-      "options": { "cwd": "${workspaceFolder}" },
-      "group": { "kind": "build", "isDefault": true },
-      "problemMatcher": ["$gcc"]
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
     },
     {
       "label": "Run debug",
       "type": "process",
-      "command": "${workspaceFolder}/build/debug/orderbook",
+      "command": "${workspaceFolder}/build/debug/orderbook_demo",
       "dependsOn": "Build debug",
-      "options": { "cwd": "${workspaceFolder}" },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     },
     {
       "label": "Test debug",
       "type": "process",
       "command": "ctest",
-      "args": ["--preset", "debug"],
+      "args": [
+        "--preset",
+        "debug"
+      ],
       "dependsOn": "Build debug",
-      "options": { "cwd": "${workspaceFolder}" },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     }
   ]
