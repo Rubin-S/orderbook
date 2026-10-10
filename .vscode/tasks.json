@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure debug",
+      "type": "process",
+      "command": "cmake",
+      "args": ["--preset", "debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build debug",
+      "type": "process",
+      "command": "cmake",
+      "args": ["--build", "--preset", "debug"],
+      "dependsOn": "Configure debug",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Run debug",
+      "type": "process",
+      "command": "${workspaceFolder}/build/debug/orderbook",
+      "dependsOn": "Build debug",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Test debug",
+      "type": "process",
+      "command": "ctest",
+      "args": ["--preset", "debug"],
+      "dependsOn": "Build debug",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

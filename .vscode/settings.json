@@ -1,0 +1,9 @@
+{
+  "cmake.useCMakePresets": "always",
+  "cmake.configureOnOpen": false,
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "C_Cpp.clang_format_style": "file",
+  "files.exclude": { "**/build": true },
+  "search.exclude": { "**/build": true },
+  "[cpp]": { "editor.defaultFormatter": "ms-vscode.cpptools", "editor.formatOnSave": true }
+}
