@@ -29,7 +29,7 @@ Side ParseSide(std::string_view value) {
         return Side::Sell;
     throw std::invalid_argument("Side must be BUY or SELL");
 }
-} // namespace
+}
 
 Command ParseCommand(std::string_view line) {
     std::array<std::string_view, 6> fields{};
@@ -67,7 +67,7 @@ Command ParseCommand(std::string_view line) {
         else
             throw std::invalid_argument("Type must be GTC or IOC");
     }
-    // Use the engine's value validation for positive price/quantity.
+
     (void)Order(command.type, command.id, command.side, command.price, command.quantity);
     return command;
 }
@@ -132,4 +132,4 @@ ReplaySummary Replay(std::istream& input, std::ostream& output) {
         throw ReplayError(lineNumber, "Output write failed");
     return summary;
 }
-} // namespace orderbook_tools
+}

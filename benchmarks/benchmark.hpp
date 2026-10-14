@@ -39,4 +39,4 @@ BenchmarkOptions ParseBenchmarkOptions(std::span<const std::string_view> args);
 Workload MakeWorkload(Scenario scenario, std::size_t count, std::uint64_t seed);
 Measurement Measure(const Workload& workload, std::size_t repetition);
 void RunBenchmarks(const BenchmarkOptions& options, std::ostream& output);
-} // namespace orderbook_tools
+}

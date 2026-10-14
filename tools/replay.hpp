@@ -38,4 +38,4 @@ class ReplayError : public std::runtime_error {
 Command ParseCommand(std::string_view line);
 CommandResult ExecuteCommand(OrderBook& book, const Command& command);
 ReplaySummary Replay(std::istream& input, std::ostream& output);
-} // namespace orderbook_tools
+}

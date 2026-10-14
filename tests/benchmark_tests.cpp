@@ -71,7 +71,7 @@ void Workloads() {
             CHECK(book.Size() == workload.expectedResting);
             CHECK(depth.GetBids() == workload.expectedBids &&
                   depth.GetAsks() == workload.expectedAsks);
-            // Hand-derived pattern outcomes, independent of the generator's expected values.
+
             if (scenario == Scenario::Resting) {
                 const auto r = count % 64;
                 const auto resting = r <= 32 ? r : 64 - r;

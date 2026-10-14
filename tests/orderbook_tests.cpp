@@ -1,6 +1,5 @@
 #include "orderbook.hpp"
 
-// Keep assertions active even when CMake is configured with Release/-DNDEBUG.
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -16,8 +15,8 @@
 
 namespace {
 
-void CheckTrade(const Trade& t, OrderId bid, OrderId ask, Quantity quantity,
-                Price execPrice, Price bidLimit, Price askLimit) {
+void CheckTrade(const Trade& t, OrderId bid, OrderId ask, Quantity quantity, Price execPrice,
+                Price bidLimit, Price askLimit) {
     assert(t.GetBidTrade().orderId_ == bid);
     assert(t.GetAskTrade().orderId_ == ask);
     assert(t.GetQuantity() == quantity);
@@ -26,11 +25,13 @@ void CheckTrade(const Trade& t, OrderId bid, OrderId ask, Quantity quantity,
     assert(t.GetAskTrade().price_ == askLimit);
 }
 
-template <class Error, class Callback>
-void ExpectThrows(Callback f) {
+template <class Error, class Callback> void ExpectThrows(Callback f) {
     bool threw = false;
-    try { f(); }
-    catch (const Error&) { threw = true; }
+    try {
+        f();
+    } catch (const Error&) {
+        threw = true;
+    }
     assert(threw);
 }
 
@@ -88,7 +89,7 @@ void TestIoc() {
     assert(t.size() == 1 && t[0].GetQuantity() == 2);
     assert(b.Size() == 0);
     assert(!b.HasOrder(52));
-    // A completed IOC order ID is not a live ID.
+
     b.AddOrder(Order{OrderType::GoodTillCancel, 52, Side::Buy, 99, 1});
     assert(b.HasOrder(52));
 }
@@ -100,23 +101,15 @@ void TestModifyPriorityAndValidation() {
     assert(b.ModifyOrder(OrderModify{1, Side::Buy, 100, 9}).empty());
     auto t = b.AddOrder(Order{OrderType::FillAndKill, 3, Side::Sell, 100, 7});
     assert(t.size() == 2);
-    assert(t[0].GetBidTrade().orderId_ == 2); // Modified ID=1 moved to the back.
+    assert(t[0].GetBidTrade().orderId_ == 2);
     assert(t[1].GetBidTrade().orderId_ == 1);
     assert(b.GetOrder(1)->GetRemainingQuantity() == 7);
     assert(b.GetOrder(1)->GetInitialQuantity() == 9);
 
-    ExpectThrows<std::invalid_argument>([&]{
-        b.ModifyOrder(OrderModify{1, Side::Sell, 100, 4});
-    });
-    ExpectThrows<std::invalid_argument>([&]{
-        b.ModifyOrder(OrderModify{1, Side::Buy, -1, 4});
-    });
-    ExpectThrows<std::invalid_argument>([&]{
-        b.ModifyOrder(OrderModify{1, Side::Buy, 100, 0});
-    });
-    ExpectThrows<std::out_of_range>([&]{
-        b.ModifyOrder(OrderModify{999, Side::Buy, 100, 3});
-    });
+    ExpectThrows<std::invalid_argument>([&] { b.ModifyOrder(OrderModify{1, Side::Sell, 100, 4}); });
+    ExpectThrows<std::invalid_argument>([&] { b.ModifyOrder(OrderModify{1, Side::Buy, -1, 4}); });
+    ExpectThrows<std::invalid_argument>([&] { b.ModifyOrder(OrderModify{1, Side::Buy, 100, 0}); });
+    ExpectThrows<std::out_of_range>([&] { b.ModifyOrder(OrderModify{999, Side::Buy, 100, 3}); });
     assert(b.GetOrder(1)->GetRemainingQuantity() == 7);
     assert(b.Size() == 1);
 
@@ -138,7 +131,6 @@ void TestSnapshotAndExternalIsolation() {
     copied = Order{OrderType::FillAndKill, 88, Side::Sell, 70, 8};
     assert(b.GetOrder(1)->GetPrice() == 100);
 
-    // The snapshot remains readable after the book changes and dies.
     auto saved = b.GetOrderInfos();
     assert(b.CancelOrder(1));
     assert((saved.GetBids() == LevelInfos{{100, 3}}));
@@ -150,31 +142,29 @@ void TestWideAggregationAndValidation() {
     const Quantity maxQ = std::numeric_limits<Quantity>::max();
     b.AddOrder(Order{OrderType::GoodTillCancel, 1, Side::Buy, 100, maxQ});
     b.AddOrder(Order{OrderType::GoodTillCancel, 2, Side::Buy, 100, maxQ});
-    assert(b.GetOrderInfos().GetBids().front().quantity_ ==
-           static_cast<LevelQuantity>(maxQ) * 2);
-    ExpectThrows<std::invalid_argument>([&]{
-        b.AddOrder(Order{OrderType::GoodTillCancel, 1, Side::Sell, 100, 1});
+    assert(b.GetOrderInfos().GetBids().front().quantity_ == static_cast<LevelQuantity>(maxQ) * 2);
+    ExpectThrows<std::invalid_argument>(
+        [&] { b.AddOrder(Order{OrderType::GoodTillCancel, 1, Side::Sell, 100, 1}); });
+    ExpectThrows<std::invalid_argument>([&] { b.AddOrder(OrderPointer{}); });
+    ExpectThrows<std::invalid_argument>([] {
+        Order o{OrderType::GoodTillCancel, 1, Side::Buy, 0, 1};
+        (void)o;
     });
-    ExpectThrows<std::invalid_argument>([&]{
-        b.AddOrder(OrderPointer{});
+    ExpectThrows<std::invalid_argument>([] {
+        Order o{OrderType::GoodTillCancel, 1, Side::Sell, 100, 0};
+        (void)o;
     });
-    ExpectThrows<std::invalid_argument>([]{
-        Order o{OrderType::GoodTillCancel, 1, Side::Buy, 0, 1}; (void)o;
+    ExpectThrows<std::invalid_argument>([] {
+        Order o{static_cast<OrderType>(99), 1, Side::Sell, 100, 1};
+        (void)o;
     });
-    ExpectThrows<std::invalid_argument>([]{
-        Order o{OrderType::GoodTillCancel, 1, Side::Sell, 100, 0}; (void)o;
-    });
-    ExpectThrows<std::invalid_argument>([]{
-        Order o{static_cast<OrderType>(99), 1, Side::Sell, 100, 1}; (void)o;
-    });
-    ExpectThrows<std::invalid_argument>([]{
-        Order o{OrderType::FillAndKill, 1, static_cast<Side>(99), 100, 1}; (void)o;
+    ExpectThrows<std::invalid_argument>([] {
+        Order o{OrderType::FillAndKill, 1, static_cast<Side>(99), 100, 1};
+        (void)o;
     });
     assert(b.Size() == 2);
 }
 
-// Independent, deliberately simple O(n) matching oracle for differential tests.
-// It tracks resting orders in a vector and finds the best crossing order by scan.
 struct OracleOrder {
     OrderId id;
     Side side;
@@ -183,30 +173,38 @@ struct OracleOrder {
     Quantity remaining;
     std::uint64_t insertionSequence;
 };
-struct OracleTrade { OrderId bid, ask; Price bidLimit, askLimit, exec; Quantity quantity; };
+struct OracleTrade {
+    OrderId bid, ask;
+    Price bidLimit, askLimit, exec;
+    Quantity quantity;
+};
 
 class Oracle {
-public:
+  public:
     std::vector<OracleOrder> live;
     std::uint64_t sequence = 0;
 
-    std::vector<OracleTrade> Add(OrderId id, Side side, Price price,
-                                 Quantity quantity, OrderType type) {
+    std::vector<OracleTrade> Add(OrderId id, Side side, Price price, Quantity quantity,
+                                 OrderType type) {
         std::vector<OracleTrade> results;
         Quantity remaining = quantity;
         while (remaining > 0) {
             auto chosen = live.end();
             for (auto it = live.begin(); it != live.end(); ++it) {
-                if (it->side == side) continue;
-                if (side == Side::Buy && it->price > price) continue;
-                if (side == Side::Sell && it->price < price) continue;
-                if (chosen == live.end() ||
-                    (side == Side::Buy && it->price < chosen->price) ||
+                if (it->side == side)
+                    continue;
+                if (side == Side::Buy && it->price > price)
+                    continue;
+                if (side == Side::Sell && it->price < price)
+                    continue;
+                if (chosen == live.end() || (side == Side::Buy && it->price < chosen->price) ||
                     (side == Side::Sell && it->price > chosen->price) ||
-                    (it->price == chosen->price && it->insertionSequence < chosen->insertionSequence))
+                    (it->price == chosen->price &&
+                     it->insertionSequence < chosen->insertionSequence))
                     chosen = it;
             }
-            if (chosen == live.end()) break;
+            if (chosen == live.end())
+                break;
             const auto q = std::min(remaining, chosen->remaining);
             if (side == Side::Buy)
                 results.push_back({id, chosen->id, price, chosen->price, chosen->price, q});
@@ -214,7 +212,8 @@ public:
                 results.push_back({chosen->id, id, chosen->price, price, chosen->price, q});
             remaining -= q;
             chosen->remaining -= q;
-            if (chosen->remaining == 0) live.erase(chosen);
+            if (chosen->remaining == 0)
+                live.erase(chosen);
         }
         if (remaining && type == OrderType::GoodTillCancel)
             live.push_back({id, side, price, quantity, remaining, sequence++});
@@ -222,8 +221,8 @@ public:
     }
 
     void Cancel(OrderId id) {
-        const auto it = std::find_if(live.begin(), live.end(),
-                                     [id](const auto& o){return o.id == id;});
+        const auto it =
+            std::find_if(live.begin(), live.end(), [id](const auto& o) { return o.id == id; });
         assert(it != live.end());
         live.erase(it);
     }
@@ -241,8 +240,10 @@ void Verify(const OrderBook& book, const Oracle& oracle) {
         assert(actual->GetPrice() == o.price);
         assert(actual->GetRemainingQuantity() == o.remaining);
         assert(actual->GetInitialQuantity() == o.initial);
-        if (o.side == Side::Buy) bids[o.price] += o.remaining;
-        else asks[o.price] += o.remaining;
+        if (o.side == Side::Buy)
+            bids[o.price] += o.remaining;
+        else
+            asks[o.price] += o.remaining;
     }
     const auto levels = book.GetOrderInfos();
     assert(levels.GetBids().size() == bids.size());
@@ -255,15 +256,15 @@ void Verify(const OrderBook& book, const Oracle& oracle) {
     for (const auto& [price, q] : asks) {
         assert((levels.GetAsks()[i++] == LevelInfo{price, q}));
     }
-    if (!bids.empty() && !asks.empty()) assert(bids.begin()->first < asks.begin()->first);
+    if (!bids.empty() && !asks.empty())
+        assert(bids.begin()->first < asks.begin()->first);
 }
 
 void CompareTrades(const Trades& actual, const std::vector<OracleTrade>& expected) {
     assert(actual.size() == expected.size());
     for (std::size_t i = 0; i < expected.size(); ++i)
-        CheckTrade(actual[i], expected[i].bid, expected[i].ask,
-                   expected[i].quantity, expected[i].exec,
-                   expected[i].bidLimit, expected[i].askLimit);
+        CheckTrade(actual[i], expected[i].bid, expected[i].ask, expected[i].quantity,
+                   expected[i].exec, expected[i].bidLimit, expected[i].askLimit);
 }
 
 void TestRandomizedAgainstOracle() {
@@ -298,7 +299,7 @@ void TestRandomizedAgainstOracle() {
     }
 }
 
-} // namespace
+}
 
 int main() {
     TestBasicGtcAndBestPrice();

@@ -56,7 +56,7 @@ std::uint64_t Nanoseconds(std::chrono::steady_clock::duration duration) {
     const auto value = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
     return value > 0 ? static_cast<std::uint64_t>(value) : 0;
 }
-} // namespace
+}
 
 BenchmarkOptions ParseBenchmarkOptions(std::span<const std::string_view> args) {
     BenchmarkOptions options;
@@ -131,7 +131,7 @@ Workload MakeWorkload(Scenario scenario, std::size_t count, std::uint64_t seed) 
             add({Action::Add, id + 4, Side::Sell, price, 3, OrderType::FillAndKill});
         }
     }
-    // Pattern arithmetic is independent of OrderBook; completed cycles are empty.
+
     if (scenario == Scenario::Resting) {
         const auto r = count % 64;
         workload.expectedResting = r <= 32 ? r : 64 - r;
@@ -166,7 +166,7 @@ LatencyPercentiles CalculatePercentiles(std::vector<std::uint64_t> samples) {
     if (samples.empty())
         throw std::invalid_argument("Percentiles need at least one sample");
     std::sort(samples.begin(), samples.end());
-    // ceil(n*p/100), decomposed to avoid overflowing size_t for large vectors.
+
     const auto rank = [&](std::size_t p) {
         return (samples.size() / 100) * p + ((samples.size() % 100) * p + 99) / 100 - 1;
     };
@@ -223,7 +223,7 @@ Measurement Measure(const Workload& workload, std::size_t repetition) {
 
 void RunBenchmarks(const BenchmarkOptions& options, std::ostream& output) {
     Validate(options);
-    // CSV decimals must remain independent of the user's locale.
+
     output.imbue(std::locale::classic());
 #if defined(__clang__)
     output << "# compiler=Clang " << __clang_version__ << '\n';
@@ -252,4 +252,4 @@ void RunBenchmarks(const BenchmarkOptions& options, std::ostream& output) {
         }
     }
 }
-} // namespace orderbook_tools
+}

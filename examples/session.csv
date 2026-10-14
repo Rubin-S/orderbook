@@ -1,4 +1,3 @@
-# Sweep two ask levels; the second remains partially filled.
 ADD,101,SELL,10000,10,GTC
 ADD,102,SELL,10010,5,GTC
 ADD,103,BUY,10020,12,IOC

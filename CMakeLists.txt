@@ -17,7 +17,10 @@ endif()
 
 if(ORDERBOOK_ENABLE_SANITIZERS)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT MSVC)
-        target_compile_options(orderbook INTERFACE -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer)
+        target_compile_options(orderbook INTERFACE
+            -fsanitize=address,undefined
+            -fno-sanitize-recover=undefined
+            -fno-omit-frame-pointer)
         target_link_options(orderbook INTERFACE -fsanitize=address,undefined)
     else()
         message(FATAL_ERROR "Sanitizers require GCC or Clang.")
@@ -46,7 +49,8 @@ endif()
 add_executable(orderbook_replay tools/replay_main.cpp)
 target_link_libraries(orderbook_replay PRIVATE orderbook_replay_support)
 if(BUILD_TESTING)
-    add_test(NAME replay_cli COMMAND "${CMAKE_COMMAND}"
+    add_test(NAME replay_cli
+        COMMAND "${CMAKE_COMMAND}"
         "-DREPLAY=$<TARGET_FILE:orderbook_replay>"
         "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_replay.cmake")
@@ -65,7 +69,8 @@ target_compile_definitions(orderbook_benchmark_support PRIVATE ORDERBOOK_BUILD_T
 add_executable(orderbook_bench benchmarks/benchmark_main.cpp)
 target_link_libraries(orderbook_bench PRIVATE orderbook_benchmark_support)
 if(BUILD_TESTING)
-    add_test(NAME benchmark_smoke COMMAND orderbook_bench --operations 120 --repetitions 1 --seed 42)
+    add_test(NAME benchmark_smoke
+        COMMAND orderbook_bench --operations 120 --repetitions 1 --seed 42)
 endif()
 
 if(BUILD_TESTING AND ORDERBOOK_ENABLE_SANITIZERS)

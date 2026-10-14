@@ -1,5 +1,3 @@
-// Intentional undefined behavior: verifies that the sanitizer configuration
-// exits unsuccessfully instead of merely printing a recoverable diagnostic.
 #include <iostream>
 #include <limits>
 
